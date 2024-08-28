@@ -1,0 +1,419 @@
+package org.statement.com;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class PgApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(PgApplication.class, args);
+	}
+
+}
+
+
+package org.statement.com.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.statement.com.dto.Owner;
+import org.statement.com.dto.PGPlace;
+
+@RestController
+@RequestMapping("/owner")
+public class OwnerController {
+
+    @Autowired
+    private OwnerService ownerService;
+
+    @PostMapping("/add")
+    public ResponseEntity<Owner> saveOwner(@RequestBody Owner owner) {
+        return ownerService.saveOwner(owner);
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<Owner> updateOwner(@RequestBody Owner owner) {
+        return ownerService.updateOwner(owner);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Owner> getOwnerById(@PathVariable Long id) {
+        return ownerService.findById(id);
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<Owner> verifyOwner(@RequestParam String phone, @RequestParam String password) {
+        return ownerService.verifyOwner(phone, password);
+    }
+
+    @GetMapping("/{ownerId}/pgplaces")
+    public ResponseEntity<List<PGPlace>> getOwnerPGPlaces(@PathVariable Long ownerId) {
+        return ownerService.getOwnerPGPlaces(ownerId);
+    }
+}
+
+
+package org.statement.com.controller;
+
+import java.util.List;
+
+import org.software.pgaccommodation.dto.PGPlace;
+import org.software.pgaccommodation.service.PGPlaceService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/pg")
+public class PGPlaceController {
+
+    @Autowired
+    private PGPlaceService pgPlaceService;
+
+    
+    
+    //Important
+    @PostMapping("/add")
+    public ResponseEntity<PGPlace> addPGPlace(@RequestBody PGPlace pgPlace) {
+        return pgPlaceService.addPGPlace(pgPlace);
+    }
+
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<PGPlace> getPGPlaceDetails(@PathVariable Long id) {
+        return pgPlaceService.getPGPlaceDetails(id);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PGPlace> updatePGPlace(@PathVariable Long id, @RequestBody PGPlace pgPlace) {
+        return pgPlaceService.updatePGPlace(id, pgPlace);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deletePGPlace(@PathVariable Long id) {
+        return pgPlaceService.deletePGPlace(id);
+    }
+    
+    
+   //Important
+    @GetMapping("/city/{city}")
+    public ResponseEntity<List<PGPlace>> getPGPlacesByCity(@PathVariable String city) {
+        return pgPlaceService.getPGPlacesByCity(city);
+    }
+    
+    
+    //Important
+    @GetMapping("/locality/{locality}")
+    public ResponseEntity<List<PGPlace>> getPGPlacesByLocality(@PathVariable String locality) {
+        return pgPlaceService.getPGPlacesByLocality(locality);
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<PGPlace> changeStatus(@PathVariable Long id, @RequestParam boolean status) {
+        return pgPlaceService.changeStatus(id, status);
+    }
+}
+
+
+package org.statement.com.controller;
+
+import org.software.pgaccommodation.dto.Tenant;
+import org.software.pgaccommodation.service.TenantService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/tenants")
+public class TenantController {
+
+    @Autowired
+    private TenantService tenantService;
+
+    @PostMapping
+    public ResponseEntity<Tenant> saveTenant(@RequestBody Tenant tenant) {
+        return tenantService.saveTenant(tenant);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Tenant> getTenantById(@PathVariable Long id) {
+        return tenantService.findById(id);
+    }
+
+    
+    @PostMapping("/verify")
+    public ResponseEntity<Tenant> verifyTenant(@RequestParam String email, @RequestParam String password) {
+        return tenantService.verifyTenant(email, password);
+    }
+}
+
+
+package org.statement.com.dto;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Owner {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String phone;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @OneToMany(mappedBy = "owner")
+    private List<PGPlace> pgPlaces;
+}
+
+
+package org.statement.com.dto;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class PGPlace {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String registrationNumber;
+
+    @Column(nullable = false)
+    private double builtUpArea;
+
+    @Column(nullable = false)
+    private double rentAmount;
+
+    @Column(nullable = false)
+    private String city;
+
+    @Column(nullable = false)
+    private String locality;
+
+    @Column(nullable = false)
+    private boolean availability;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private Owner owner;
+}
+
+
+package org.statement.com.dto;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Tenant {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String phone;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+}
+package org.statement.com.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.statement.com.dto.Owner;
+
+public interface OwnerRepository extends JpaRepository<Owner, Long> {}
+
+
+package org.statement.com.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.statement.com.dto.PGPlace;
+
+public interface PGPlaceRepository extends JpaRepository<PGPlace, Long> {
+    List<PGPlace> findByCity(String city);
+    List<PGPlace> findByLocality(String locality);
+}
+
+
+package org.statement.com.repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.statement.com.dto.Tenant;
+
+public interface TenantRepository extends JpaRepository<Tenant, Long> {}
+
+
+
+package org.statement.com.service;
+import java.util.List;
+
+import org.statement.com.dto.Owner;
+import org.statement.com.dto.PGPlace;
+
+public interface PGPlaceService {
+    List<PGPlace> getPlacesByCity(String city);
+    List<PGPlace> getPlacesByLocality(String locality);
+    PGPlace getPlaceById(Long id);
+    Owner getOwnerDetails(Long id);
+    PGPlace addPlace(PGPlace place);
+    PGPlace updatePlace(PGPlace place);
+    void deletePlace(Long id);
+    void changeAvailability(Long id, boolean status);
+}
+
+
+package org.statement.com.service;
+
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.statement.com.dto.Owner;
+import org.statement.com.dto.PGPlace;
+import org.statement.com.repository.OwnerRepository;
+import org.statement.com.repository.PGPlaceRepository;
+
+@Service
+public class PGServiceImpl implements PGPlaceService {
+    @Autowired
+    private PGPlaceRepository pgPlaceRepository;
+
+    @Autowired
+    private OwnerRepository ownerRepository;
+    
+    
+
+    @Override
+    public List<PGPlace> getPlacesByCity(String city) {
+        return pgPlaceRepository.findByCity(city);
+    }
+
+    @Override
+    public List<PGPlace> getPlacesByLocality(String locality) {
+        return pgPlaceRepository.findByLocality(locality);
+    }
+
+    @Override
+    public PGPlace getPlaceById(Long id) {
+        return pgPlaceRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public Owner getOwnerDetails(Long id) {
+        PGPlace place = pgPlaceRepository.findById(id).orElse(null);
+        return place != null ? place.getOwner() : null;
+    }
+
+    @Override
+    public PGPlace addPlace(PGPlace place) {
+        return pgPlaceRepository.save(place);
+    }
+
+    @Override
+    public PGPlace updatePlace(PGPlace place) {
+        return pgPlaceRepository.save(place);
+    }
+
+    @Override
+    public void deletePlace(Long id) {
+        pgPlaceRepository.deleteById(id);
+    }
+
+    @Override
+    public void changeAvailability(Long id, boolean status) {
+        PGPlace place = pgPlaceRepository.findById(id).orElse(null);
+        if (place != null) {
+            place.setAvailability(status);
+            pgPlaceRepository.save(place);
+        }
+    }
+}
+
+
+spring.application.name=PG
+
+
+
+
+spring.datasource.url= jdbc:mysql://localhost:3306/pg_api_app?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=J2EE@java
+
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.MySQL8Dialect
+
+
+
+
+
+
+
+
+
